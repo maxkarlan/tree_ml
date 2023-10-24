@@ -5,7 +5,7 @@ let grid, next;
 // let feed = 0.0367; // Adjusted feed rate
 // let kill = 0.0649; // Adjusted kill rate
 let colorA, colorB, colorC;
-
+let offScreenCanvas;
 let canvasSize = 75; 
 let offsetX, offsetY;
 
@@ -45,22 +45,26 @@ function setup() {
   colorC = color(random(255), random(255), random(255));
 
   frameRate(120);
+
+  offScreenCanvas = createGraphics(canvasSize, canvasSize);
 }
 
 function draw() {
   background(220);
+
+  offScreenCanvas.background(220);
+
+  // Replace all drawing operations from main canvas to offscreenCanvas
+  offScreenCanvas.loadPixels(); // Use this instead of loadPixels()
 
   for (let x = 1; x < canvasSize - 1; x++) {
     for (let y = 1; y < canvasSize - 1; y++) {
       let a = grid[x][y].a;
       let b = grid[x][y].b;
       let c = grid[x][y].c;
-      next[x][y].a = a + (dA * laplaceA(x, y)) - (a * b * b) + (feed * (1 - a));
-      next[x][y].b = b + (dB * laplaceB(x, y)) + (a * b * b) - ((kill + feed) * b);
-      next[x][y].a = constrain(next[x][y].a, 0, 1);
-      next[x][y].b = constrain(next[x][y].b, 0, 1);
-      next[x][y].c = c + (dC * laplaceC(x, y)) - (a * b * c) + (feed * (1 - c));
-      next[x][y].c = constrain(next[x][y].c, 0, 1);
+      next[x][y].a = constrain(a + (dA * laplaceA(x, y)) - (a * b * b) + (feed * (1 - a)), 0, 1);
+      next[x][y].b = constrain(b + (dB * laplaceB(x, y)) + (a * b * b) - ((kill + feed) * b), 0, 1);
+      next[x][y].c = constrain(c + (dC * laplaceC(x, y)) - (a * b * c) + (feed * (1 - c)), 0, 1);
     }
   }
 
@@ -70,12 +74,17 @@ function draw() {
       let b = next[x][y].b;
       let c = next[x][y].c;
       let col = lerpColor(lerpColor(colorA, colorB, b), colorC, c);
-      set(x + offsetX, y + offsetY, col);
+      offScreenCanvas.set(x, y, col);
     }
   }
 
-  updatePixels();
+  offScreenCanvas.updatePixels();
   swap();
+
+  // Now, display the content of offscreenCanvas on the main canvas
+  // Calculate scale factor based on smaller dimension of the window
+  let scaleFactor = min(windowWidth, windowHeight) / canvasSize;
+  image(offScreenCanvas, (windowWidth - canvasSize * scaleFactor) / 2, (windowHeight - canvasSize * scaleFactor) / 2, canvasSize * scaleFactor, canvasSize * scaleFactor);
 }
 
 
