@@ -6,7 +6,7 @@ let grid, next;
 // let kill = 0.0649; // Adjusted kill rate
 let colorA, colorB, colorC;
 let offScreenCanvas;
-let canvasSize = 75; 
+let canvasSize = 25;
 let offsetX, offsetY;
 
 function setup() {
